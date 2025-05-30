@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronograma de Corrida</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        .container {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin: auto;
+        }
+        input, button {
+            margin: 5px;
+            padding: 10px;
+            width: 80%;
+        }
+        #tempoRestante, #tempoTotal, #series {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Cronograma de Corrida 🏃‍♂️</h2>
+        
+        <label>Duração total (min):</label>
+        <input type="number" id="duracaoTotal" min="1">
+
+        <label>Tempo de corrida (seg):</label>
+        <input type="number" id="tempoCorrida" min="1">
+
+        <label>Tempo de caminhada (seg):</label>
+        <input type="number" id="tempoCaminhada" min="1">
+
+        <button onclick="iniciarCronograma()">Iniciar</button>
+        <button onclick="pausarCronograma()">Pausar</button>
+        <button onclick="retomarCronograma()">Retomar</button>
+        <button onclick="encerrarCronograma()">Encerrar</button>
+
+        <p id="tempoRestante">Tempo restante da atividade: ---</p>
+        <p id="tempoTotal">Tempo total restante: ---</p>
+        <p id="series">Séries concluídas: 0</p>
+    </div>
+
+    <script>
+        let executando = false;
+        let pausado = false;
+        let tempoDecorrido = 0;
+        let contadorSeries = 0;
+        let duracaoTotal = 0;
+        let tempoCorrida = 0;
+        let tempoCaminhada = 0;
+        let atividadeAtual = "";
+
+        function iniciarCronograma() {
+            pausado = false;
+            tempoDecorrido = 0;
+            contadorSeries = 0;
+            executando = true;
+
+            duracaoTotal = document.getElementById("duracaoTotal").value * 60;
+            tempoCorrida = parseInt(document.getElementById("tempoCorrida").value);
+            tempoCaminhada = parseInt(document.getElementById("tempoCaminhada").value);
+
+            if (isNaN(duracaoTotal) || isNaN(tempoCorrida) || isNaN(tempoCaminhada)) {
+                alert("Por favor, insira valores válidos!");
+                return;
+            }
+
+            executarCronograma();
+        }
+
+        function executarCronograma() {
+            if (!executando || pausado) return;
+
+            if (tempoDecorrido >= duracaoTotal) {
+                document.getElementById("tempoRestante").innerText = "Cronograma concluído! 🎉";
+                return;
+            }
+
+            atividadeAtual = "Corrida 🏃‍♂️";
+            for (let i = tempoCorrida; i > 0; i--) {
+                setTimeout(() => {
+                    if (!executando || pausado) return;
+                    atualizarTempo(i, duracaoTotal - tempoDecorrido - i);
+                }, (tempoCorrida - i) * 1000);
+            }
+            tempoDecorrido += tempoCorrida;
+
+            setTimeout(() => {
+                if (!executando || pausado) return;
+
+                atividadeAtual = "Caminhada 🚶‍♂️";
+                for (let i = tempoCaminhada; i > 0; i--) {
+                    setTimeout(() => {
+                        if (!executando || pausado) return;
+                        atualizarTempo(i, duracaoTotal - tempoDecorrido - i);
+                    }, (tempoCaminhada - i) * 1000);
+                }
+                tempoDecorrido += tempoCaminhada;
+                contadorSeries++;
+
+                setTimeout(executarCronograma, tempoCaminhada * 1000 + 5000); // Pausa de 5 seg
+            }, tempoCorrida * 1000 + 5000); // Pausa de 5 seg
+        }
+
+        function atualizarTempo(tempoRestante, tempoTotalRestante) {
+            document.getElementById("tempoRestante").innerText = `${atividadeAtual}: ${tempoRestante} seg restantes`;
+            document.getElementById("tempoTotal").innerText = `Total restante: ${Math.floor(tempoTotalRestante / 60)} min ${tempoTotalRestante % 60} seg`;
+            document.getElementById("series").innerText = `Séries concluídas: ${contadorSeries}`;
+        }
+
+        function pausarCronograma() {
+            pausado = true;
+            document.getElementById("tempoRestante").innerText = "Cronograma pausado!";
+        }
+
+        function retomarCronograma() {
+            pausado = false;
+            executarCronograma();
+        }
+
+        function encerrarCronograma() {
+            executando = false;
+            document.getElementById("tempoRestante").innerText = "Cronograma encerrado!";
+            document.getElementById("tempoTotal").innerText = "";
+            document.getElementById("series").innerText = "Séries concluídas: 0";
+        }
+    </script>
+</body>
+</html>
