@@ -64,6 +64,7 @@
         let tempoCorrida = 0;
         let tempoCaminhada = 0;
         let atividadeAtual = "";
+        let intervalo;
 
         function iniciarCronograma() {
             pausado = false;
@@ -85,46 +86,41 @@
 
         function executarCronograma() {
             if (!executando || pausado) return;
-
-            if (tempoDecorrido >= duracaoTotal) {
-                document.getElementById("tempoRestante").innerText = "Cronograma concluído! 🎉";
-                return;
-            }
-
-            atividadeAtual = "Corrida 🏃‍♂️";
-            for (let i = tempoCorrida; i > 0; i--) {
-                setTimeout(() => {
-                    if (!executando || pausado) return;
-                    atualizarTempo(i, duracaoTotal - tempoDecorrido - i);
-                }, (tempoCorrida - i) * 1000);
-            }
-            tempoDecorrido += tempoCorrida;
-
-            setTimeout(() => {
-                if (!executando || pausado) return;
-
-                atividadeAtual = "Caminhada 🚶‍♂️";
-                for (let i = tempoCaminhada; i > 0; i--) {
-                    setTimeout(() => {
-                        if (!executando || pausado) return;
-                        atualizarTempo(i, duracaoTotal - tempoDecorrido - i);
-                    }, (tempoCaminhada - i) * 1000);
+            
+            intervalo = setInterval(() => {
+                if (!executando || pausado) {
+                    clearInterval(intervalo);
+                    return;
                 }
-                tempoDecorrido += tempoCaminhada;
-                contadorSeries++;
 
-                setTimeout(executarCronograma, tempoCaminhada * 1000 + 5000); // Pausa de 5 seg
-            }, tempoCorrida * 1000 + 5000); // Pausa de 5 seg
+                if (tempoDecorrido >= duracaoTotal) {
+                    document.getElementById("tempoRestante").innerText = "Cronograma concluído! 🎉";
+                    encerrarCronograma();
+                    return;
+                }
+
+                if (tempoDecorrido % (tempoCorrida + tempoCaminhada) < tempoCorrida) {
+                    atividadeAtual = "Corrida 🏃‍♂️";
+                } else {
+                    atividadeAtual = "Caminhada 🚶‍♂️";
+                    contadorSeries++;
+                }
+
+                atualizarTempo(duracaoTotal - tempoDecorrido);
+
+                tempoDecorrido++;
+            }, 1000);
         }
 
-        function atualizarTempo(tempoRestante, tempoTotalRestante) {
-            document.getElementById("tempoRestante").innerText = `${atividadeAtual}: ${tempoRestante} seg restantes`;
+        function atualizarTempo(tempoTotalRestante) {
+            document.getElementById("tempoRestante").innerText = `${atividadeAtual}: ${tempoTotalRestante % (tempoCorrida + tempoCaminhada)} seg restantes`;
             document.getElementById("tempoTotal").innerText = `Total restante: ${Math.floor(tempoTotalRestante / 60)} min ${tempoTotalRestante % 60} seg`;
             document.getElementById("series").innerText = `Séries concluídas: ${contadorSeries}`;
         }
 
         function pausarCronograma() {
             pausado = true;
+            clearInterval(intervalo);
             document.getElementById("tempoRestante").innerText = "Cronograma pausado!";
         }
 
@@ -135,6 +131,7 @@
 
         function encerrarCronograma() {
             executando = false;
+            clearInterval(intervalo);
             document.getElementById("tempoRestante").innerText = "Cronograma encerrado!";
             document.getElementById("tempoTotal").innerText = "";
             document.getElementById("series").innerText = "Séries concluídas: 0";
